@@ -16,6 +16,13 @@ jobs:
       - name: Show Docker version
         run: docker --version
 
+      - name: Debug workspace
+        run: |
+          pwd
+          ls -la
+          echo "GITHUB_WORKSPACE=$GITHUB_WORKSPACE"
+          ls -la $GITHUB_WORKSPACE
+
       - name: Show Docker Compose version
         run: docker compose version
 
