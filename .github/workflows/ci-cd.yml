@@ -1,39 +1,33 @@
 name: Expense Tracker CI/CD
-
 on:
   push:
     branches:
       - main
-
 jobs:
   build-and-deploy:
     runs-on: self-hosted
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-
+      - name: Fetch secrets from Vault
+        run: |
+          bash /home/aau/Desktop/project2/Expense_Tracker/vault.sh
+          cp /home/aau/Desktop/project2/Expense_Tracker/backend/.env $GITHUB_WORKSPACE/backend/.env
       - name: Show Docker version
         run: docker --version
-
       - name: Debug workspace
         run: |
           pwd
           ls -la
           echo "GITHUB_WORKSPACE=$GITHUB_WORKSPACE"
           ls -la $GITHUB_WORKSPACE
-
       - name: Show Docker Compose version
         run: docker compose version
-
       - name: Validate Docker Compose
         run: docker compose config
-
       - name: Build Docker images
         run: docker compose build
-
       - name: Deploy application
         run: docker compose up -d
-
       - name: Show running containers
         run: docker ps
