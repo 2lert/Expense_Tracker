@@ -3,31 +3,46 @@ on:
   push:
     branches:
       - main
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: 2lert/expense_tracker
+
 jobs:
   build-and-deploy:
     runs-on: self-hosted
+    permissions:
+      contents: read
+      packages: write
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
       - name: Fetch secrets from Vault
         run: |
           bash /home/aau/Desktop/project2/Expense_Tracker/vault.sh
           cp /home/aau/Desktop/project2/Expense_Tracker/backend/.env $GITHUB_WORKSPACE/backend/.env
-      - name: Show Docker version
-        run: docker --version
-      - name: Debug workspace
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push backend image
         run: |
-          pwd
-          ls -la
-          echo "GITHUB_WORKSPACE=$GITHUB_WORKSPACE"
-          ls -la $GITHUB_WORKSPACE
-      - name: Show Docker Compose version
-        run: docker compose version
+          docker build -f backend/Dockerfile -t ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest .
+          docker push ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+
       - name: Validate Docker Compose
         run: docker compose config
-      - name: Build Docker images
-        run: docker compose build
-      - name: Deploy application
-        run: docker compose up -d
+
+      - name: Pull latest image and deploy
+        run: |
+          docker compose pull backend
+          docker compose up -d
+
       - name: Show running containers
         run: docker ps
